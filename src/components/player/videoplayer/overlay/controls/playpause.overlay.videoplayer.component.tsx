@@ -8,20 +8,24 @@ export function PlayPauseControlOverlay () {
 
     // Necessary variables
     const videoPlayerContext = useContext(PlayerContext)
+    if (!videoPlayerContext) {
+        return null
+    }
     const [isPlaying, setIsPlaying] = useState<boolean>(false)
 
     useEffect(() => {
-        if (!videoPlayerContext.player) return
+        const player = videoPlayerContext.player
+        if (!player) return
 
         const handlePlay = () => { setIsPlaying(true) }
         const handlePause = () => { setIsPlaying(false) }
-        setIsPlaying(!videoPlayerContext.player.paused())
-        videoPlayerContext.player.on('play', handlePlay)
-        videoPlayerContext.player.on('pause', handlePause)
+        setIsPlaying(!player.paused())
+        player.on('play', handlePlay)
+        player.on('pause', handlePause)
 
         return () => {
-            videoPlayerContext.player.off('play', handlePlay)
-            videoPlayerContext.player.off('pause', handlePause)
+            player.off('play', handlePlay)
+            player.off('pause', handlePause)
         }
     }, [videoPlayerContext.player])
 

@@ -11,7 +11,7 @@ export type PlayerContextType = {
     thumbnail: any[]
 }
 
-export const PlayerContext = createContext<PlayerContextType>(null)
+export const PlayerContext = createContext<PlayerContextType | null>(null)
 
 export function VideoPlayer ({ InputData }: any) {
 

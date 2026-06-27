@@ -50,7 +50,7 @@ export async function generateThumbnails(video: HTMLVideoElement, maxThumbnails:
     const originalTime = video.currentTime;
     const wasPaused = video.paused;
 
-    const thumbnailArray = [];
+    const thumbnailArray: Thumbnail[] = [];
 
     for (let i = 0; i < thumbnailCount; i++) {
 
@@ -105,6 +105,6 @@ export function getThumbnail (hoverTime: number, thumbnailList: Thumbnail[]): st
             hoverTime >= interval.start &&
             hoverTime < interval.end
     )
-    
+
     return thumbnail?.image ?? null
 }
