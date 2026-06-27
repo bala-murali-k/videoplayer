@@ -40,8 +40,8 @@ export function FileBrowserPlayerComponent ({ InputData, InputFunction }: any) {
                 <button className="font-poppins font-medium text-sm text-white mb-3.5 border border-gray-600 rounded-xl px-5 py-2 cursor-pointer">Browse Files</button>
                 <div className="flex justify-center flex-wrap gap-2">
                     {
-                        InputData?.supportedFormats?.map((data: string) => (
-                            <div className="border border-gray-800 rounded-md px-1.5 py-0.5">
+                        InputData?.supportedFormats?.map((data: string, index: number) => (
+                            <div key={`${index}. format`} className="border border-gray-800 rounded-md px-1.5 py-0.5">
                                 <p className="uppercase text-[11px] text-gray-400">{data}</p>
                             </div>
                         ))

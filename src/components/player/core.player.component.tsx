@@ -12,7 +12,6 @@ export function PlayerCoreComponent ({  }) {
 	const ACCEPT = 'video/mp4,video/matroska,video/webm,video/x-msvideo,video/quicktime'
 
 	const [currentVideoFile, setCurrentVideoFile] = useState<File | null>(null)
-	console.log('LLLLLLLLLLLLLLLLLL', currentVideoFile?.type);
 	
 
 	return (
