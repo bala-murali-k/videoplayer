@@ -1,7 +1,13 @@
 // Required imports
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, createContext } from 'react'
 import videojs from 'video.js'
 import 'video.js/dist/video-js.css'
+// Component imports
+import { VideoPlayerOverlay } from './overlay/overlay.videoplayer.component'
+
+export type PlayerContextType = ReturnType<typeof videojs> | null
+
+export const PlayerContext = createContext<PlayerContextType>(null)
 
 export function VideoPlayer ({ InputData }: any) {
 
@@ -21,7 +27,7 @@ export function VideoPlayer ({ InputData }: any) {
         videoReference.current.appendChild(videoElement)
 
         playerReference.current = videojs(videoElement, {
-            controls: true,
+            controls: false,
             autoplay: false,
             preload: 'auto',
             fluid: true,
@@ -59,10 +65,13 @@ export function VideoPlayer ({ InputData }: any) {
     // functions
 
     return (
-        <div className="flex flex-col justify-center items-center w-screen">
+        <div className="flex flex-col justify-center items-center relative w-screen">
             <div className='container w-10/11'>
                 <div ref={videoReference} />
             </div>
+            <PlayerContext.Provider value={playerReference.current}>
+                <VideoPlayerOverlay />
+            </PlayerContext.Provider>
         </div>
     )
 }
