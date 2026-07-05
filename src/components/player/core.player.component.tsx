@@ -1,5 +1,5 @@
 // Required imports
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 // Component imports
 import { FileBrowserPlayerComponent } from './filebrowse/filebrowse.player.component'
 import { RecentlyPlayedPlayerComponent } from './recentplays/recentplayed.player.component'
@@ -8,10 +8,21 @@ import { VideoPlayer } from './videoplayer/videoplayer.player.component'
 
 export function PlayerCoreComponent ({  }) {
 	
-    const FORMATS = ['mp4', 'mkv', 'webm', 'avi', 'mov']
+	// Necessary variables
+  	const FORMATS = ['mp4', 'mkv', 'webm', 'avi', 'mov']
 	const ACCEPT = 'video/mp4,video/matroska,video/webm,video/x-msvideo,video/quicktime'
-
 	const [currentVideoFile, setCurrentVideoFile] = useState<File | null>(null)
+	const [isVideoLoading, setIsVideoLoading] = useState<boolean>(false)
+	const [loadingStages, setLoadingStages] = useState({
+		videoReady: false,
+		playerReady: false,
+		thumbnailGeneration: false
+	})
+
+	// Side effects
+	useEffect(() => {
+		setIsVideoLoading(true)
+	}, [currentVideoFile])
 	
 
 	return (
@@ -21,9 +32,18 @@ export function PlayerCoreComponent ({  }) {
 				<VideoPlayer
 					InputData={{
 						selectedFile: currentVideoFile,
-						fileType: currentVideoFile?.type
+						fileType: currentVideoFile?.type,
+						loading: isVideoLoading,
+						loadingStage: loadingStages,
 					}}
-					InputFunction={{}}
+					InputFunction={{
+						handleLoading: (state: boolean) => {
+							setIsVideoLoading(state)
+						},
+						handleLoadingStage: (stage: any) => {
+							setLoadingStages(stage)
+						}
+					}}
 				/> :
 				<FileBrowserPlayerComponent
 					InputData={{

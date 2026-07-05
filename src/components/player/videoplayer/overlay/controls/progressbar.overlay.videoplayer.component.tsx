@@ -5,7 +5,7 @@ import { PlayerContext } from "../../videoplayer.player.component"
 // Component imports
 // Required objects
 
-export function ProgressbarControlOverlay () {
+export function ProgressbarControlOverlay() {
 
     // Necessary variables
     const videoPlayerContext = useContext(PlayerContext)
@@ -26,7 +26,7 @@ export function ProgressbarControlOverlay () {
         const player = videoPlayerContext.player
         if (!player || player.duration() == null) return
 
-        const updateProgress = () => { 
+        const updateProgress = () => {
             setCurrentTime(player.currentTime() ?? 0)
             setDuration(player.duration() || 0)
         }
@@ -44,8 +44,8 @@ export function ProgressbarControlOverlay () {
     }, [videoPlayerContext.player])
 
     return (
-        <div className='absolute inset-0 flex items-end'>
-            <div className="w-full max-w-2xl px-4 py-2">
+        <div className='absolute inset-0 flex items-end justify-center'>
+            <div className="container w-10/11 max-w-2xl px-4 py-2">
                 <div className="relative flex items-center gap-4">
                     <span className="font-poppins text-xs font-medium min-w-[40px]" style={{ color: '#E8E8FF' }}>
                         {formatVideoTime(currentTime)}
@@ -83,9 +83,10 @@ export function ProgressbarControlOverlay () {
                         {/* Hover Preview Tooltip with Image and Time */}
                         {hoverState.isHovering && duration > 0 && (
                             <div
-                                className="absolute -top-[118px] left-1/2 -translate-x-1/2 px-3 py-2 bg-[rgba(30,30,46,0.95)] backdrop-blur-sm rounded-xl pointer-events-none border border-[rgba(108,99,255,0.2)] shadow-2xl transition-opacity duration-200 z-20"
+                                className="absolute -top-[118px] px-3 py-2 bg-[rgba(30,30,46,0.95)] backdrop-blur-sm rounded-xl pointer-events-none border border-[rgba(108,99,255,0.2)] shadow-2xl transition-opacity duration-200 z-20"
                                 style={{
-                                    transform: `translateX(calc(-50% + ${hoverState.position * 100}% - 0px))`
+                                    left: `${hoverState.position * 100}%`,
+                                    transform: 'translateX(-50%)'
                                 }}
                             >
                                 {/* Preview Image */}
