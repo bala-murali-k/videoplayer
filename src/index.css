@@ -8,3 +8,40 @@
     'GRAD' 0,
     'opsz' 24;
 }
+
+/* Ensure Video.js fills container and keeps video vertically centered */
+.video-js {
+  width: 100% !important;
+  height: 100% !important;
+  background-color: transparent !important;
+}
+
+.video-js video,
+.video-js .vjs-tech {
+  object-fit: contain !important;
+  width: 100% !important;
+  height: 100% !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+/* In fullscreen mode, reset aspect-ratio and ensure full viewport centering */
+:fullscreen,
+:-webkit-full-screen {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: #000000 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  border-radius: 0 !important;
+  aspect-ratio: auto !important;
+}
+
+:fullscreen .video-js,
+:-webkit-full-screen .video-js {
+  width: 100% !important;
+  height: 100% !important;
+  margin: auto !important;
+}

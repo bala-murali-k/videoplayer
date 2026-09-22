@@ -1,5 +1,5 @@
 // types
-type Thumbnail = {
+export type Thumbnail = {
     interval: {
         start: number;
         end: number;
@@ -28,78 +28,123 @@ export function formatVideoTime(seconds: number): string {
     return `${minutes}:${paddedSeconds}`
 }
 
-export async function generateThumbnails(video: HTMLVideoElement, maxThumbnails: number = 20) {
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-
-    if (!context) {
-        throw new Error("Unable to create canvas context.");
-    }
-
-    const width = 160;
-    const height = 90;
-
-    canvas.width = width;
-    canvas.height = height;
-
-    const duration = video.duration;
-
-    const thumbnailCount = Math.min(maxThumbnails, Math.max(1, Math.ceil(duration)));
-    const interval = duration / thumbnailCount;
-
-    const originalTime = video.currentTime;
-    const wasPaused = video.paused;
-
-    const thumbnailArray: Thumbnail[] = [];
-
-    for (let i = 0; i < thumbnailCount; i++) {
-
-        const start = i * interval;
-        const end = Math.min((i + 1) * interval, duration);
-
-        await new Promise<void>((resolve) => {
-
-            const onSeeked = () => {
-
-                context.drawImage(video, 0, 0, width, height);
-
-                thumbnailArray.push({
-                    interval: {
-                        start,
-                        end
-                    },
-                    image: canvas.toDataURL("image/webp", 0.8)
-                });
-
-                resolve();
-            };
-
-            video.addEventListener("seeked", onSeeked, { once: true });
-
-            video.currentTime = start;
-        });
-    }
-
-    await new Promise<void>((resolve) => {
-
-        const onSeeked = () => {
-
-            if (!wasPaused) {
-                video.play().catch(() => {});
-            }
-
-            resolve();
-        };
-
-        video.addEventListener("seeked", onSeeked, { once: true });
-
-        video.currentTime = originalTime;
-    });
-
-    return thumbnailArray;
+export function formatFileSize(bytes: number): string {
+    if (!Number.isFinite(bytes) || bytes <= 0) return "0 B"
+    const units = ["B", "KB", "MB", "GB", "TB"]
+    const i = Math.floor(Math.log(bytes) / Math.log(1024))
+    const formattedSize = (bytes / Math.pow(1024, i)).toFixed(1)
+    return `${formattedSize} ${units[i]}`
 }
 
-export function getThumbnail (hoverTime: number, thumbnailList: Thumbnail[]): string | null {
+export async function generateThumbnails(
+    video: HTMLVideoElement,
+    maxThumbnails: number = 15
+): Promise<Thumbnail[]> {
+    const duration = video.duration
+    if (!Number.isFinite(duration) || duration <= 0) {
+        return []
+    }
+
+    const canvas = document.createElement("canvas")
+    const context = canvas.getContext("2d")
+
+    if (!context) {
+        return []
+    }
+
+    const width = 160
+    const height = 90
+    canvas.width = width
+    canvas.height = height
+
+    const thumbnailCount = Math.min(maxThumbnails, Math.max(1, Math.floor(duration)))
+    const interval = duration / thumbnailCount
+    const thumbnailArray: Thumbnail[] = []
+
+    // Attempt to use an offscreen video element to avoid interrupting the main video playback
+    const videoSource = video.currentSrc || video.src
+    let targetVideo: HTMLVideoElement = video
+    let isOffscreen = false
+
+    if (videoSource) {
+        try {
+            const offscreen = document.createElement("video")
+            offscreen.muted = true
+            offscreen.playsInline = true
+            offscreen.preload = "auto"
+            offscreen.src = videoSource
+
+            // Wait for metadata on offscreen video with a timeout
+            await new Promise<void>((resolve) => {
+                const timer = setTimeout(() => resolve(), 2000)
+                offscreen.addEventListener("loadedmetadata", () => {
+                    clearTimeout(timer)
+                    resolve()
+                }, { once: true })
+            })
+
+            if (offscreen.duration && Number.isFinite(offscreen.duration)) {
+                targetVideo = offscreen
+                isOffscreen = true
+            }
+        } catch {
+            targetVideo = video
+            isOffscreen = false
+        }
+    }
+
+    const originalTime = targetVideo.currentTime
+    const wasPaused = targetVideo.paused
+
+    try {
+        for (let i = 0; i < thumbnailCount; i++) {
+            const start = i * interval
+            const end = Math.min((i + 1) * interval, duration)
+
+            await new Promise<void>((resolve) => {
+                const timeoutId = setTimeout(() => {
+                    targetVideo.removeEventListener("seeked", onSeeked)
+                    resolve()
+                }, 500) // 500ms seek safety timeout
+
+                const onSeeked = () => {
+                    clearTimeout(timeoutId)
+                    try {
+                        context.drawImage(targetVideo, 0, 0, width, height)
+                        thumbnailArray.push({
+                            interval: { start, end },
+                            image: canvas.toDataURL("image/webp", 0.7)
+                        })
+                    } catch {
+                        // Ignore frame capture failure on protected or empty frame
+                    }
+                    resolve()
+                }
+
+                targetVideo.addEventListener("seeked", onSeeked, { once: true })
+                targetVideo.currentTime = Math.min(start, duration - 0.1)
+            })
+        }
+    } finally {
+        if (!isOffscreen) {
+            // Restore original state if live video element was used
+            targetVideo.currentTime = originalTime
+            if (!wasPaused) {
+                targetVideo.play().catch(() => {})
+            }
+        } else {
+            // Cleanup offscreen element
+            targetVideo.src = ""
+            targetVideo.load()
+            targetVideo.remove()
+        }
+    }
+
+    return thumbnailArray
+}
+
+export function getThumbnail(hoverTime: number, thumbnailList: Thumbnail[]): string | null {
+    if (!thumbnailList || thumbnailList.length === 0) return null
     const thumbnail = thumbnailList.find(
         ({ interval }) =>
             hoverTime >= interval.start &&
